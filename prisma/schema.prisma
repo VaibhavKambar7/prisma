@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  pic       String   @default("https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chats      Chat[] @relation("UserChats")
+  groupAdmin Chat[] @relation("GroupAdmin")
+
+  messages Message[]
+}
+
+model Chat {
+  id           String   @id @default(uuid())
+  chatName     String?
+  isGroupChat  Boolean  @default(false)
+  latestMsg    Message? @relation("LatestMessage", fields: [latestMsgId], references: [id])
+  latestMsgId  String?
+  groupAdmin   User?    @relation("GroupAdmin", fields: [groupAdminId], references: [id])
+  groupAdminId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users    User[]    @relation("UserChats")
+  messages Message[] 
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sender   User   @relation(fields: [senderId], references: [id])
+  senderId String
+  chat     Chat   @relation(fields: [chatId], references: [id])
+  chatId   String
+
+  latestMsg Chat[] @relation("LatestMessage")
+}
